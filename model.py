@@ -77,3 +77,12 @@ def train_random_forest(csv_path: str = "data.csv", ) -> Tuple[RandomForestClass
     print(f"Saved Random Forest model artifact to {MODEL_PATH}")
 
     return rf_classifier, feature_importance_dict
+
+def load_rf_model() -> Tuple[RandomForestClassifier, Dict[str, float]]:
+    try:
+        model =joblib.load(MODEL_PATH)
+        metadata = joblib.load(METADATA_PATH)
+        return model, metadata
+    except FileNotFoundError:
+        print("Model artifacts could not be found, retraining and saving Model.")
+        return train_random_forest()
