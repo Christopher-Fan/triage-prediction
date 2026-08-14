@@ -6,7 +6,7 @@ class TriageRecord(Base):
     __tablename__ = "triage_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    patient_id = Column
+    patient_id = Column(String, index=True, nullable=False)
     heart_rate = Column(Float)
     systolic_bp = Column(Float)
     oxygen_saturation = Column(Float)

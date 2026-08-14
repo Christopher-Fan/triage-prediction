@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Any, Dict, Tuple
 import joblib
 import numpy as np
@@ -6,9 +7,17 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
-MODEL_PATH = "triage_rf_model.joblib"
-METADATA_PATH = "model_metadata.joblib"
 
+
+BASE_DIR = Path(__file__).resolve().parent
+CACHE_DIR = BASE_DIR / "cache"
+DATA_DIR = BASE_DIR / "data"
+
+
+MODEL_PATH = CACHE_DIR / "triage_rf_model.joblib"
+METADATA_PATH = CACHE_DIR / "model_metadata.joblib"
+
+DATA_PATH = DATA_DIR / "data.csv"
 
 # Feature Engineering
 # ===================
@@ -22,18 +31,15 @@ feature_cols = [
 ]
 
 #reads kaggle dataset as input, outputs the Random Forest Classifier and Dictionary of important features
-def train_random_forest(csv_path: str = "data.csv", ) -> Tuple[RandomForestClassifier, Dict[str, float]]: 
+def train_random_forest() -> Tuple[RandomForestClassifier, Dict[str, float]]: 
+    if not DATA_PATH.exists():
+        raise FileNotFoundError(f"Dataset file '{DATA_PATH}' not found.")
 
-    if not os.path.exists(csv_path):
-        raise FileNotFoundError(
-            f"Dataset file '{csv_path}' not found."
-        )
-
-    print(f"Found dataset, loading '{csv_path}")
+    print(f"Found dataset, loading '{DATA_PATH}")
     try:
-        df = pd.read_csv(csv_path, sep=";",encoding="utf-8")
+        df = pd.read_csv(DATA_PATH, sep=";",encoding="utf-8")
     except UnicodeDecodeError: 
-        df = pd.read_csv(csv_path, sep=";",encoding="latin1")
+        df = pd.read_csv(DATA_PATH, sep=";",encoding="latin1")
 
     target_col = "KTAS_expert" # Korean Triage Experts used for training
 

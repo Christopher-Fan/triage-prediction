@@ -98,7 +98,7 @@ async def predict_triage(payload: PatientVitalRequest, db: Session = Depends(get
     prediction = int(model.predict(features)[0])
 
     #Map the prediction to priorities
-    priority_map = {0: "ROUTINE", 1: "URGENT", 2: "CRITICAL"}
+    priority_map = {1: "RESUSCITATION", 2: "EMERGENT", 3: "URGENT", 4: "LESS URGENT", 5: "NON-URGENT"}
     priority_level = priority_map.get(prediction, "UNKNOWN")
 
     # Rule-based Clinical Factors
