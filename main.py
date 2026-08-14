@@ -24,3 +24,30 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# --- Request/Response Schema ---
+class PatientVitalRequest(BaseModel):
+    patient_id: str = Field(..., example="CHR-0501")
+    heart_rate: float = Field(..., ge=30, le= 250, description= "Beats per minute")
+    systolic_bp: float = Field(..., ge=50, le=250, description= "Systolic blood pressure (mmHg)")
+    oxygen_saturation: float = Field(..., ge=50, le=100, description="Sp02 percentage")
+    temperature_f: float = Field(..., ge=90.0, le=108.0, description="Body temperature in Fahrenheit")
+
+class TriagePredictionResponse(BaseModel):
+    patient_id: str
+    priority_level: str
+    risk_score: int
+    risk_factors: List[str]
+    global_feature_importances: Dict[str, float]
+    status: str
+
+# --- API Routes ---
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check():
+    #liveness probe to check for deadlocks
+    model_loaded = "triage_classifier" in ml_models
+    return {
+        "status": "healthy" if model_loaded else "unhealthy",
+        "model_loaded": model_loaded,
+        "service": "Triage AI Classifier"
+    }
