@@ -1,9 +1,16 @@
 from contextlib import asynccontextmanager
 from typing import Dict, List, Any
 import numpy as np
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Depends, status
+from datetime import datetime
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+from database import engine, Base, get_db
+import patient_vital_and_prediction_models
 from model import load_rf_model
+
+# Initialize database tables on module loading
+Base.metadata.create_all(bind=engine)
 
 # In-memory storage for loaded models
 ml_models: Dict[str, Any] = {}
@@ -34,12 +41,28 @@ class PatientVitalRequest(BaseModel):
     temperature_f: float = Field(..., ge=90.0, le=108.0, description="Body temperature in Fahrenheit")
 
 class TriagePredictionResponse(BaseModel):
+    record_id: int
     patient_id: str
     priority_level: str
     risk_score: int
     risk_factors: List[str]
     global_feature_importances: Dict[str, float]
     status: str
+    created_at: datetime
+
+class PatientHistoryRecord(BaseModel):
+    id: int
+    patient_id: str
+    heart_rate: float
+    systolic_bp: float
+    oxygen_saturation: float
+    temperature_f: float
+    predicted_ktas_level: int
+    risk_category: str
+    created_at: datetime
+
+    class Config: 
+        from_attributes = True
 
 # --- API Routes ---
 @app.get("/health", status_code=status.HTTP_200_OK)
@@ -53,7 +76,7 @@ async def health_check():
     }
 
 @app.post("/predict", response_model=TriagePredictionResponse)
-async def predict_triage(payload: PatientVitalRequest):
+async def predict_triage(payload: PatientVitalRequest, db: Session = Depends(get_db)):
     model = ml_models.get("triage_classifier")
     importances = ml_models.get("feature_importances", {})
 
@@ -74,6 +97,10 @@ async def predict_triage(payload: PatientVitalRequest):
     # Execute the prediction of the payload
     prediction = int(model.predict(features)[0])
 
+    #Map the prediction to priorities
+    priority_map = {0: "ROUTINE", 1: "URGENT", 2: "CRITICAL"}
+    priority_level = priority_map.get(prediction, "UNKNOWN")
+
     # Rule-based Clinical Factors
     # Can have added features, but will need to add new feature columns in Model.py
     risk_factors = []
@@ -87,13 +114,44 @@ async def predict_triage(payload: PatientVitalRequest):
     if payload.temperature_f > 100.4: 
         risk_factors.append("Fever")
 
-    priority_map = {0: "ROUTINE", 1: "URGENT", 2: "CRITICAL"}
+    all_risk_factors = risk_factors if risk_factors else ["No acute anomalies detected"]
+
+    # Save DB record to PostgreSQL Database
+    db_record = patient_vital_and_prediction_models.TriageRecord(
+        patient_id = payload.patient_id,
+        heart_rate=payload.heart_rate,
+        systolic_bp=payload.systolic_bp,
+        oxygen_saturation=payload.oxygen_saturation,
+        temperature_f=payload.temperature_f,
+        predicted_ktas_level=prediction,
+        risk_category=priority_level
+    )
+    db.add(db_record)
+    db.commit()
+    db.refresh(db_record)
 
     return TriagePredictionResponse(
-        patient_id = payload.patient_id,
-        priority_level = priority_map.get(prediction, "UNKNOWN"),
+        record_id=db_record.id,
+        patient_id = db_record.patient_id,
+        priority_level = priority_level,
         risk_score = prediction,
-        risk_factors = risk_factors if risk_factors else ["No acute anomalies detected"],
+        risk_factors = all_risk_factors,
         global_feature_importances=importances,
         status="SUCCESS",
+        created_at=db_record.created_at
     )
+
+# Fetch all historical triage records for a given patient ID
+# Helps check for prior conditions, which is important for Emergency Situations
+@app.get("/records/{patient_id}", response_model=List[PatientHistoryRecord])
+async def get_patient_history(patient_id: str, db: Session = Depends(get_db)):
+    records = db.query(patient_vital_and_prediction_models.TriageRecord).filter(
+        patient_vital_and_prediction_models.TriageRecord.patient_id == patient_id
+    ).order_by(patient_vital_and_prediction_models.TriageRecord.created_at.desc()).all()
+
+    if not records:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"No triage history found for patient ID: {patient_id}"
+        )
+    return records
