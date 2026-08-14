@@ -59,7 +59,7 @@ async def predict_triage(payload: PatientVitalRequest):
 
     if not model:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVICE_ERROR,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="ML Model has not properly been initialized"
         )
 
@@ -79,7 +79,7 @@ async def predict_triage(payload: PatientVitalRequest):
     risk_factors = []
 
     if payload.oxygen_saturation < 92: 
-        risk_factors.append("Hypoxia (Sp02 < 92%)")
+        risk_factors.append("Hypoxia (SpO2 < 92%)")
     if payload.heart_rate > 100 or payload.heart_rate < 50:
         risk_factors.append("Abnormal Heart Rate")
     if payload.systolic_bp < 90 or payload.systolic_bp > 140:

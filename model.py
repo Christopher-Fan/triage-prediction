@@ -15,10 +15,10 @@ METADATA_PATH = "model_metadata.joblib"
 # These 4 were chosen based off the standard Emergency Severity Index (ESI) intake protocols.
 
 feature_cols = [
-    "heart_rate",
-    "systolic_bp",
-    "oxygen_saturation",
-    "temperature_f",
+    "HR",
+    "SBP",
+    "Saturation",
+    "BT",
 ]
 
 #reads kaggle dataset as input, outputs the Random Forest Classifier and Dictionary of important features
@@ -30,15 +30,32 @@ def train_random_forest(csv_path: str = "data.csv", ) -> Tuple[RandomForestClass
         )
 
     print(f"Found dataset, loading '{csv_path}")
-    df = pd.read_csv(csv_path)
+    try:
+        df = pd.read_csv(csv_path, sep=";",encoding="utf-8")
+    except UnicodeDecodeError: 
+        df = pd.read_csv(csv_path, sep=";",encoding="latin1")
 
-    target_col = "triage_score" # Lables: 0 = Routine, 1 = Urgent, 2 = Critical
+    target_col = "KTAS_expert" # Korean Triage Experts used for training
+
+    # Filter dataset down to required columns
+    df_model = df[feature_cols + [target_col]].copy()
+
+    # Clean numeric data
+    for col in feature_cols + [target_col]:
+        df_model[col] = pd.to_numeric(df_model[col], errors="coerce")
 
     # This removes incomplete records (any record with NaN data)
-    df = df.dropna(subset= feature_cols + [target_col])
-    
-    x = df[feature_cols]
-    y = df[target_col]
+    df_model = df_model.dropna(subset= feature_cols + [target_col])
+
+    # Map to API names and convert BT from C to F
+    x = pd.DataFrame({
+        "heart_rate": df_model["HR"],
+        "systolic_bp": df_model["SBP"],
+        "oxygen_saturation": df_model["Saturation"],
+        "temperature_f": (df_model["BT"] * 9 / 5) + 32,
+    })
+
+    y = df_model[target_col].astype(int)
 
     # Split to training and testing splits
     # 80/20 targeting the wanted variables using stratification to prevent bias
