@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 from typing import Dict, List, Any
 import numpy as np
 from fastapi import FastAPI, HTTPException, Depends, status
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter
 from datetime import datetime
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -17,7 +19,7 @@ ml_models: Dict[str, Any] = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Starting Triagle Classifier Service...")
+    print("Starting Triage Classifier Service...")
     model, feature_importances = load_rf_model()
     ml_models["triage_classifier"] = model
     ml_models["feature_importances"] = feature_importances
@@ -30,6 +32,16 @@ app = FastAPI(
     description="Real-Time Emergency Patient Triage & Risk Analystics API",
     version="1.0.0",
     lifespan=lifespan
+)
+
+# Prometheus FastAPI Instrument to communicate with Grafana visualization
+Instrumentator().instrument(app).expose(app)
+
+# Prometheus metric for KTAS Distribution
+KTAS_PREDICTIONS = Counter(
+    "ktas_predictions_total",
+    "Total count of patient predictions broken down by KTAS score (1-5)",
+    ["ktas_level"]  # Prometheus label/dimension
 )
 
 # --- Request/Response Schema ---
@@ -96,6 +108,7 @@ async def predict_triage(payload: PatientVitalRequest, db: Session = Depends(get
 
     # Execute the prediction of the payload
     prediction = int(model.predict(features)[0])
+    KTAS_PREDICTIONS.labels(ktas_level=str(prediction)).inc()
 
     #Map the prediction to priorities
     priority_map = {1: "RESUSCITATION", 2: "EMERGENT", 3: "URGENT", 4: "LESS URGENT", 5: "NON-URGENT"}
