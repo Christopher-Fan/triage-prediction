@@ -71,9 +71,12 @@ docker-compose ps
 
 ### Testing and Verification Suite
 Local unit runtest is available using pytest:
+```text
 pytest tests/test_api.py -v
+```
 
 ### API Usage Example
+```text
 $body = @{
     patient_id = "PATIENT_101"
     heart_rate = 110
@@ -83,4 +86,4 @@ $body = @{
 } | ConvertTo-Json
 
 Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"
-
+```
