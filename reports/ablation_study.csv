@@ -1,4 +1,4 @@
 Model / Configuration,Cross-Validation,Macro F1-Score,Resuscitation (KTAS 1) Sensitivity
 Logistic Regression (Baseline),Stratified 5-Fold,0.2366,50.0%
 Default Random Forest,Stratified 5-Fold,0.2547,0.0%
-Optuna-Tuned Random Forest,Stratified 5-Fold,0.2726,30.0%
+Optuna-Tuned Random Forest,Stratified 5-Fold,0.2734,30.0%

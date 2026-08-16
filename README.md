@@ -64,3 +64,51 @@ triage/
 ├── tests/            # Comprehensive pytest integration and unit test suite
 ├── docker-compose.yml# Multi-service container orchestration
 └── requirements.txt  # Project dependencies
+
+## ML Pipeline & Hyperparameter Optimization
+To prevent majority classes (non-urgent visits) from overshadowing high-acuity life threats, the model optimizes for Macro F1-Score using Stratified 5-Fold Cross-Validation.
+
+### Optuna Tuning Configuration
+Trials: 15 automated iterations searching hyperparameter space (n_estimators, max_depth, min_samples_split, min_samples_leaf).
+Feature Importances: Ranked Gini importance highlighting Oxygen Saturation and Systolic Blood Pressure as primary clinical drivers of acute classification.
+
+## Quickstart and Installation
+Prerequisites:
+- Docker Desktop installed and running
+- Python 3.10+
+
+Build & Run via Docker Compose
+```text
+# Build containers and start services in detached mode
+docker-compose up -d --build
+
+# Verify running containers
+docker-compose ps
+```
+
+API is live at http://localhost:8000
+Grafana Observability at http://localhost:3000 "admin"/"admin"
+Prometheus Query at http://localhost:9090
+
+## Testing and Verification
+Testing suite to test for edge cases in pytest and training showcase
+```text
+pytest tests/test_api.py -v
+
+python -m src.model.train
+```
+
+## API USAGE EXAMPLE
+BASH COMMAND:
+```text
+$body = @{
+    patient_id = "PATIENT_101"
+    heart_rate = 110
+    systolic_bp = 90
+    oxygen_saturation = 92
+    temperature_f = 101.2
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"```
+
+
