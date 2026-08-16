@@ -1,0 +1,32 @@
+Test 1: KTAS 1
+$body = @{
+    patient_id = "PATIENT_KTAS_1"
+    heart_rate = 145.0
+    systolic_bp = 72.0
+    oxygen_saturation = 84.0
+    temperature_f = 104.2
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"
+
+Test 2: KTAS 3
+$body = @{
+    patient_id = "PATIENT_KTAS_3"
+    heart_rate = 108.0
+    systolic_bp = 118.0
+    oxygen_saturation = 95.0
+    temperature_f = 101.8
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"
+
+Test 3: KTAS 5
+$body = @{
+    patient_id = "PATIENT_KTAS_5"
+    heart_rate = 68.0
+    systolic_bp = 118.0
+    oxygen_saturation = 99.0
+    temperature_f = 98.4
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"
