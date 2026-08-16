@@ -112,8 +112,8 @@ from sklearn.pipeline import make_pipeline
 def run_ablation_study(
     X: pd.DataFrame, y: pd.Series, best_rf_params: Dict[str, Any]
 ) -> pd.DataFrame:
-    """Executes Stratified 5-Fold ablation study comparing baseline and tuned models."""
-    print("\n🔬 Running Ablation & Benchmarking Study across Stratified 5-Fold CV...")
+    # Executes Stratified 5-Fold ablation study comparing baseline and tuned models.
+    print("\nRunning Ablation & Benchmarking Study across Stratified 5-Fold CV...")
 
     # Ensure class_weight="balanced" is included in tuned RF
     tuned_rf_params = best_rf_params.copy()
@@ -170,7 +170,7 @@ def run_ablation_study(
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     results_df.to_csv(REPORTS_DIR / "ablation_study.csv", index=False)
 
-    print("\n📊 --- Ablation Study Results ---")
+    print("\n--- Ablation Study Results ---")
     print(results_df.to_string(index=False))
     print("---------------------------------\n")
 
