@@ -110,6 +110,6 @@ $body = @{
     temperature_f = 101.2
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"```
+Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"
 ```
 
