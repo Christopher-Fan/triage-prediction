@@ -96,7 +96,7 @@ Testing suite to test for edge cases in pytest and training showcase
 ```text
 pytest tests/test_api.py -v
 
-python -m src.model.train
+python -m src.models.train
 ```
 
 ## API USAGE EXAMPLE
