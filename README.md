@@ -64,6 +64,7 @@ triage/
 ├── tests/            # Comprehensive pytest integration and unit test suite
 ├── docker-compose.yml# Multi-service container orchestration
 └── requirements.txt  # Project dependencies
+```
 
 ## ML Pipeline & Hyperparameter Optimization
 To prevent majority classes (non-urgent visits) from overshadowing high-acuity life threats, the model optimizes for Macro F1-Score using Stratified 5-Fold Cross-Validation.
@@ -110,5 +111,5 @@ $body = @{
 } | ConvertTo-Json
 
 Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method Post -Body $body -ContentType "application/json"```
-
+```
 
