@@ -26,7 +26,7 @@ To prevent majority classes (KTAS 3/4) from obscuring life-threatening presentat
 | Default Random Forest | Stratified 5-Fold | 0.2547 | 0.0% |
 | **Optuna-Tuned Random Forest** | **Stratified 5-Fold** | **0.2715** | **30.0%** |
 
-> *Detailed validation methodology and metric ablation available in [`docs/validation_ablation.md`](reports/validation_ablation.md).*
+> *Detailed validation methodology and metric ablation available in [`reports/validation_ablation.md`](reports/validation_ablation.md).*
 
 ---
 
